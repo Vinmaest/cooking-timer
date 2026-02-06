@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer Masak 🍳</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .food-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .food-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            padding: 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            color: white;
+            font-size: 1.1em;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .food-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+        }
+
+        .food-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .food-btn.egg {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        }
+
+        .food-btn.noodle {
+            background: linear-gradient(135deg, #fab1a0 0%, #ff7675 100%);
+        }
+
+        .food-btn.veggie {
+            background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+        }
+
+        .food-btn .emoji {
+            font-size: 2.5em;
+        }
+
+        .timer-display {
+            display: none;
+            text-align: center;
+        }
+
+        .timer-display.active {
+            display: block;
+        }
+
+        .food-name {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .time {
+            font-size: 4em;
+            font-weight: bold;
+            color: #2d3436;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .animation-area {
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cooking-emoji {
+            font-size: 5em;
+            animation: bounce 1s infinite;
+        }
+
+        .cooking-emoji.egg-cooking {
+            animation: egg-spin 2s infinite;
+        }
+
+        .cooking-emoji.noodle-cooking {
+            animation: noodle-shake 0.5s infinite;
+        }
+
+        .cooking-emoji.veggie-cooking {
+            animation: veggie-sway 2s infinite ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(-5deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        @keyframes egg-spin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(1); }
+            75% { transform: rotate(270deg) scale(1.1); }
+        }
+
+        @keyframes noodle-shake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(-10px) rotate(-10deg); }
+            75% { transform: translateX(10px) rotate(10deg); }
+        }
+
+        @keyframes veggie-sway {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            animation: rise 3s infinite;
+        }
+
+        .bubble.egg-bubble {
+            background: rgba(255, 234, 167, 0.6);
+            box-shadow: 0 0 10px rgba(253, 203, 110, 0.4);
+        }
+
+        .bubble.noodle-bubble {
+            background: rgba(255, 118, 117, 0.6);
+            box-shadow: 0 0 10px rgba(250, 177, 160, 0.4);
+        }
+
+        .bubble.veggie-bubble {
+            background: rgba(85, 239, 196, 0.6);
+            box-shadow: 0 0 10px rgba(0, 184, 148, 0.4);
+        }
+
+        .bubble.default-bubble {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: 0;
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 200px;
+                opacity: 0;
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 1s linear;
+            border-radius: 10px;
+        }
+
+        .btn-control {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-control:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-control.stop {
+            background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
+        }
+
+        .finished {
+            display: none;
+            text-align: center;
+        }
+
+        .finished.show {
+            display: block;
+            animation: celebration 0.5s;
+        }
+
+        @keyframes celebration {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .finished .emoji {
+            font-size: 5em;
+            animation: rotate 2s infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .finished h2 {
+            color: #00b894;
+            font-size: 2em;
+            margin: 20px 0;
+        }
+
+        .custom-timer {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .custom-timer.show {
+            display: block;
+        }
+
+        .custom-input {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .custom-input input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .custom-input label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: #2d3436;
+            font-weight: bold;
+        }
+
+        .options-menu {
+            display: none;
+        }
+
+        .options-menu.show {
+            display: block;
+        }
+
+        .options-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 25px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            border: none;
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option-btn:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        .option-btn .time-badge {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏰ Timer Masak</h1>
+        
+        <div id="menu" class="food-options">
+            <button class="food-btn egg" onclick="showOptions('egg')">
+                <span class="emoji">🥚</span>
+                <span>Telur Rebus</span>
+            </button>
+            <button class="food-btn noodle" onclick="showOptions('noodle')">
+                <span class="emoji">🍜</span>
+                <span>Mie Instan</span>
+            </button>
+            <button class="food-btn veggie" onclick="showOptions('veggie')">
+                <span class="emoji">🥬</span>
+                <span>Sayur Hijau</span>
+            </button>
+            <button class="food-btn" style="background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);" onclick="showCustomTimer()">
+                <span class="emoji">⏱️</span>
+                <span>Timer Custom</span>
+            </button>
+        </div>
+
+        <div id="optionsMenu" class="options-menu">
+            <button class="btn-back" onclick="backToMenu()">← Kembali</button>
+            <div class="options-title" id="optionsTitle"></div>
+            <div class="options-grid" id="optionsGrid"></div>
+        </div>
+
+        <div id="customTimer" class="custom-timer">
+            <div class="custom-input">
+                <label>
+                    <span>Menit</span>
+                    <input type="number" id="customMinutes" min="0" max="60" value="5">
+                </label>
+                <label>
+                    <span>Detik</span>
+                    <input type="number" id="customSeconds" min="0" max="59" value="0">
+                </label>
+            </div>
+            <button class="btn-control" onclick="startCustomTimer()">Mulai Timer</button>
+            <button class="btn-control stop" onclick="backToMenu()">Kembali</button>
+        </div>
+
+        <div id="timerDisplay" class="timer-display">
+            <div class="food-name" id="foodName"></div>
+            
+            <div class="animation-area" id="animationArea">
+                <div class="cooking-emoji" id="cookingEmoji"></div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="time" id="timeDisplay">00:00</div>
+
+            <div>
+                <button class="btn-control stop" onclick="stopTimer()">Berhenti</button>
+            </div>
+        </div>
+
+        <div id="finished" class="finished">
+            <div class="emoji">✨🎉✨</div>
+            <h2>Matang! Selamat Makan! 😋</h2>
+            <button class="btn-control" onclick="backToMenu()">Masak Lagi</button>
+        </div>
+    </div>
+
+    <script>
+        let timerInterval;
+        let totalSeconds;
+        let remainingSeconds;
+        let isPaused = false;
+
+        const foodOptions = {
+            egg: {
+                title: '🥚 Telur Rebus',
+                emoji: '🥚',
+                options: [
+                    { name: 'Setengah Matang (Soft Boiled)', time: 360, desc: 'Kuning masih lembut' },
+                    { name: 'Matang Sedang (Medium Boiled)', time: 480, desc: 'Kuning agak padat' },
+                    { name: 'Matang Sempurna (Hard Boiled)', time: 600, desc: 'Kuning padat sempurna' },
+                    { name: 'Sangat Matang', time: 720, desc: 'Kuning sangat padat' }
+                ]
+            },
+            noodle: {
+                title: '🍜 Mie Instan',
+                emoji: '🍜',
+                options: [
+                    { name: 'Al Dente (Kenyal)', time: 120, desc: 'Mie agak keras' },
+                    { name: 'Normal', time: 180, desc: 'Mie pas matang' },
+                    { name: 'Lembut', time: 240, desc: 'Mie sangat lembut' },
+                    { name: 'Sangat Lembut', time: 300, desc: 'Mie super empuk' }
+                ]
+            },
+            veggie: {
+                title: '🥬 Sayur Hijau',
+                emoji: '🥬',
+                options: [
+                    { name: 'Crunchy (Setengah Matang)', time: 180, desc: 'Masih renyah' },
+                    { name: 'Normal', time: 300, desc: 'Matang pas' },
+                    { name: 'Empuk', time: 420, desc: 'Sangat empuk' },
+                    { name: 'Sangat Empuk', time: 540, desc: 'Super lembut' }
+                ]
+            }
+        };
+
+        function showOptions(foodType) {
+            const food = foodOptions[foodType];
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('optionsMenu').classList.add('show');
+            document.getElementById('optionsTitle').textContent = food.title;
+            
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+            
+            food.options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                const minutes = Math.floor(option.time / 60);
+                const seconds = option.time % 60;
+                const timeText = seconds > 0 ? `${minutes}:${String(seconds).padStart(2, '0')}` : `${minutes} menit`;
+                
+                btn.innerHTML = `
+                    <div>
+                        <div style="font-size: 1.2em; margin-bottom: 5px;">${option.name}</div>
+                        <div style="font-size: 0.85em; opacity: 0.9;">${option.desc}</div>
+                    </div>
+                    <div class="time-badge">${timeText}</div>
+                `;
+                btn.onclick = () => startTimer(option.time, option.name, food.emoji);
+                grid.appendChild(btn);
+            });
+        }
+
+        function showCustomTimer() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('customTimer').classList.add('show');
+        }
+
+        function startCustomTimer() {
+            const minutes = parseInt(document.getElementById('customMinutes').value) || 0;
+            const seconds = parseInt(document.getElementById('customSeconds').value) || 0;
+            const total = minutes * 60 + seconds;
+            
+            if (total > 0) {
+                startTimer(total, 'Timer Custom', '⏱️');
+            }
+        }
+
+        function startTimer(seconds, foodName, emoji) {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('optionsMenu').classList.remove('show');
+            document.getElementById('customTimer').classList.remove('show');
+            document.getElementById('timerDisplay').classList.add('active');
+            document.getElementById('finished').classList.remove('show');
+            
+            document.getElementById('foodName').textContent = foodName;
+            const emojiElement = document.getElementById('cookingEmoji');
+            emojiElement.textContent = emoji;
+            
+            // Remove all animation classes first
+            emojiElement.className = 'cooking-emoji';
+            
+            // Add specific animation based on emoji
+            if (emoji === '🥚') {
+                emojiElement.classList.add('egg-cooking');
+            } else if (emoji === '🍜') {
+                emojiElement.classList.add('noodle-cooking');
+            } else if (emoji === '🥬') {
+                emojiElement.classList.add('veggie-cooking');
+            }
+            
+            totalSeconds = seconds;
+            remainingSeconds = seconds;
+            
+            createBubbles(emoji);
+            updateDisplay();
+            
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    remainingSeconds--;
+                    updateDisplay();
+                    
+                    if (remainingSeconds <= 0) {
+                        finishTimer();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            
+            document.getElementById('timeDisplay').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            const progress = ((totalSeconds - remainingSeconds) / totalSeconds) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function createBubbles(emoji) {
+            const area = document.getElementById('animationArea');
+            
+            // Determine bubble class based on emoji
+            let bubbleClass = 'default-bubble';
+            if (emoji === '🥚') {
+                bubbleClass = 'egg-bubble';
+            } else if (emoji === '🍜') {
+                bubbleClass = 'noodle-bubble';
+            } else if (emoji === '🥬') {
+                bubbleClass = 'veggie-bubble';
+            }
+            
+            const bubbleInterval = setInterval(() => {
+                if (remainingSeconds <= 0) {
+                    clearInterval(bubbleInterval);
+                    return;
+                }
+                
+                const bubble = document.createElement('div');
+                bubble.className = `bubble ${bubbleClass}`;
+                const size = Math.random() * 30 + 10;
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                
+                area.appendChild(bubble);
+                
+                setTimeout(() => {
+                    bubble.remove();
+                }, 5000);
+            }, 500);
+        }
+
+        function finishTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timerDisplay').classList.remove('active');
+            document.getElementById('finished').classList.add('show');
+            
+            // Play alarm sound based on food type
+            playAlarmSound();
+        }
+
+        function playAlarmSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const currentEmoji = document.getElementById('cookingEmoji').textContent;
+            
+            // Different alarm patterns for different foods
+            if (currentEmoji === '🥚') {
+                // Egg - gentle repeating beeps
+                playEggAlarm(audioContext);
+            } else if (currentEmoji === '🍜') {
+                // Noodle - quick urgent beeps
+                playNoodleAlarm(audioContext);
+            } else if (currentEmoji === '🥬') {
+                // Veggie - natural chime sound
+                playVeggieAlarm(audioContext);
+            } else {
+                // Custom - classic alarm
+                playCustomAlarm(audioContext);
+            }
+        }
+
+        function playEggAlarm(audioContext) {
+            // Gentle repeating beeps - 5 beeps
+            for (let i = 0; i < 5; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                const startTime = audioContext.currentTime + (i * 0.4);
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.3);
+            }
+        }
+
+        function playNoodleAlarm(audioContext) {
+            // Quick urgent beeps - 8 fast beeps
+            for (let i = 0; i < 8; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 1000 + (i % 2 * 200);
+                oscillator.type = 'square';
+                
+                const startTime = audioContext.currentTime + (i * 0.25);
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.4, startTime + 0.02);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.15);
+            }
+        }
+
+        function playVeggieAlarm(audioContext) {
+            // Natural chime - 3 melodic tones
+            const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+            
+            notes.forEach((freq, i) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                const startTime = audioContext.currentTime + (i * 0.5);
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.8);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.8);
+            });
+        }
+
+        function playCustomAlarm(audioContext) {
+            // Classic alarm - alternating tones
+            for (let i = 0; i < 6; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = i % 2 === 0 ? 800 : 1000;
+                oscillator.type = 'sawtooth';
+                
+                const startTime = audioContext.currentTime + (i * 0.3);
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.35, startTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.25);
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            backToMenu();
+        }
+
+        function backToMenu() {
+            clearInterval(timerInterval);
+            document.getElementById('menu').style.display = 'grid';
+            document.getElementById('optionsMenu').classList.remove('show');
+            document.getElementById('timerDisplay').classList.remove('active');
+            document.getElementById('finished').classList.remove('show');
+            document.getElementById('customTimer').classList.remove('show');
+            
+            // Clear bubbles
+            const bubbles = document.querySelectorAll('.bubble');
+            bubbles.forEach(b => b.remove());
+        }
+    </script>
+</body>
+</html>
